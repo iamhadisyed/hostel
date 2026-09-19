@@ -6,8 +6,11 @@ use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\HotelAccountController;
 use App\Http\Controllers\Api\HotelController;
+use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\OtpController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PayrollController;
+use App\Http\Controllers\Api\StaffController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
@@ -56,4 +59,18 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::post('/vouchers/{voucher}/payments', [PaymentController::class, 'store']);
+
+    Route::middleware('role:'.User::ROLE_SUPER_ADMIN.','.User::ROLE_OWNER.','.User::ROLE_WARDEN)->group(function () {
+        Route::get('/hotels/{hotel}/staff', [StaffController::class, 'index']);
+        Route::post('/hotels/{hotel}/staff', [StaffController::class, 'store']);
+        Route::patch('/hotels/{hotel}/staff/{staff}', [StaffController::class, 'update']);
+        Route::delete('/hotels/{hotel}/staff/{staff}', [StaffController::class, 'destroy']);
+
+        Route::get('/staff/{staff}/attendance', [AttendanceController::class, 'index']);
+        Route::post('/staff/{staff}/attendance', [AttendanceController::class, 'store']);
+
+        Route::get('/staff/{staff}/payroll', [PayrollController::class, 'index']);
+        Route::post('/staff/{staff}/payroll', [PayrollController::class, 'store']);
+        Route::patch('/payroll/{payroll}/pay', [PayrollController::class, 'pay']);
+    });
 });

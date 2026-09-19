@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('payroll_deductions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('payroll_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('payroll_id')->constrained('payroll')->cascadeOnDelete();
             $table->string('type'); // deduction, advance, loan_repayment
             $table->decimal('amount', 10, 2);
             $table->text('note')->nullable();

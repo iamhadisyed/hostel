@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('attendance', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('staff_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('staff_id')->constrained('staff')->cascadeOnDelete();
             $table->date('date');
             $table->string('status'); // present, absent, half_day, leave
             $table->foreignId('marked_by')->constrained('users')->restrictOnDelete();
