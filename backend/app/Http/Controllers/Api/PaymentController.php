@@ -8,12 +8,15 @@ use App\Models\Booking;
 use App\Models\BookingCycle;
 use App\Models\User;
 use App\Models\Voucher;
+use App\Services\AuditLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
+    public function __construct(private readonly AuditLogService $auditLog) {}
+
     public function store(Request $request, Voucher $voucher): JsonResponse
     {
         $booking = $voucher->bookingCycle->booking;
@@ -77,6 +80,15 @@ class PaymentController extends Controller
             // Rejected: reopen the voucher for re-upload and release the held bed.
             $booking->bed?->update(['status' => Bed::STATUS_AVAILABLE]);
         });
+
+        $this->auditLog->log(
+            $request->user(),
+            $booking->hotel_id,
+            'payment.'.$payment->fresh()->status,
+            $payment,
+            ['status' => 'pending'],
+            ['status' => $payment->fresh()->status]
+        );
 
         return response()->json($payment->fresh());
     }

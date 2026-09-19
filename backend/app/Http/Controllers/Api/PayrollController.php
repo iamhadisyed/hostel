@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Payroll;
 use App\Models\Staff;
 use App\Models\User;
+use App\Services\AuditLogService;
 use App\Services\PayrollService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
@@ -15,7 +16,10 @@ use Illuminate\Support\Facades\Storage;
 
 class PayrollController extends Controller
 {
-    public function __construct(private readonly PayrollService $payrollService) {}
+    public function __construct(
+        private readonly PayrollService $payrollService,
+        private readonly AuditLogService $auditLog,
+    ) {}
 
     public function index(Request $request, Staff $staff): JsonResponse
     {
@@ -71,6 +75,15 @@ class PayrollController extends Controller
             'paid_at' => now(),
             'slip_path' => $path,
         ]);
+
+        $this->auditLog->log(
+            $request->user(),
+            $payroll->staff->hotel_id,
+            'payroll.paid',
+            $payroll,
+            ['status' => 'pending'],
+            ['status' => 'paid', 'net_amount' => $payroll->net_amount]
+        );
 
         return response()->json($payroll->fresh());
     }

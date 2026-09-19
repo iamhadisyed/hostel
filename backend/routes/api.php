@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AvailabilityController;
 use App\Http\Controllers\Api\BookingController;
@@ -113,5 +114,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/hotels/{hotel}/visitor-passes', [VisitorPassController::class, 'index']);
         Route::post('/hotels/{hotel}/visitor-passes', [VisitorPassController::class, 'store']);
         Route::patch('/hotels/{hotel}/visitor-passes/{visitorPass}/checkout', [VisitorPassController::class, 'checkout']);
+    });
+
+    Route::middleware('role:'.User::ROLE_SUPER_ADMIN.','.User::ROLE_OWNER)->group(function () {
+        Route::get('/audit-logs', [AuditLogController::class, 'index']);
     });
 });

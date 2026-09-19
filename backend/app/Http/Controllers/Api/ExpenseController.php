@@ -7,11 +7,14 @@ use App\Http\Requests\Expense\CreateExpenseRequest;
 use App\Models\Expense;
 use App\Models\Hotel;
 use App\Models\User;
+use App\Services\AuditLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
 {
+    public function __construct(private readonly AuditLogService $auditLog) {}
+
     public function index(Request $request, Hotel $hotel): JsonResponse
     {
         $this->authorizeView($request->user(), $hotel);
@@ -60,6 +63,8 @@ class ExpenseController extends Controller
             'logged_by' => $request->user()->id,
         ]);
 
+        $this->auditLog->log($request->user(), $hotel->id, 'expense.logged', $expense, [], ['amount' => $expense->amount, 'category' => $expense->category]);
+
         return response()->json($expense, 201);
     }
 
@@ -80,6 +85,15 @@ class ExpenseController extends Controller
             'approved_at' => now(),
             'rejection_reason' => $data['decision'] === 'rejected' ? ($data['reason'] ?? null) : null,
         ]);
+
+        $this->auditLog->log(
+            $request->user(),
+            $hotel->id,
+            'expense.'.$expense->fresh()->status,
+            $expense,
+            ['status' => 'pending'],
+            ['status' => $expense->fresh()->status]
+        );
 
         return response()->json($expense->fresh());
     }

@@ -10,6 +10,7 @@ use App\Models\Hotel;
 use App\Models\Room;
 use App\Models\RoomType;
 use App\Models\User;
+use App\Services\AuditLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,8 @@ use Illuminate\Support\Str;
 
 class HotelController extends Controller
 {
+    public function __construct(private readonly AuditLogService $auditLog) {}
+
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -96,6 +99,8 @@ class HotelController extends Controller
 
             return $hotel;
         });
+
+        $this->auditLog->log($request->user(), $hotel->id, 'hotel.created', $hotel, [], ['name' => $hotel->name]);
 
         return response()->json($hotel->load(['owner', 'floors.rooms.beds', 'roomTypes']), 201);
     }

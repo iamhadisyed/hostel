@@ -9,6 +9,7 @@ use App\Models\Bed;
 use App\Models\Booking;
 use App\Models\Hotel;
 use App\Models\User;
+use App\Services\AuditLogService;
 use App\Services\VoucherService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,10 @@ use Illuminate\Validation\ValidationException;
 
 class BookingController extends Controller
 {
-    public function __construct(private readonly VoucherService $voucherService) {}
+    public function __construct(
+        private readonly VoucherService $voucherService,
+        private readonly AuditLogService $auditLog,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -137,6 +141,8 @@ class BookingController extends Controller
             return $this->voucherService->createNextCycle($booking);
         });
 
+        $this->auditLog->log($request->user(), $booking->hotel_id, 'booking.approved', $booking, [], ['status' => Booking::STATUS_APPROVED]);
+
         return response()->json($booking->fresh()->load('cycles.voucher'));
     }
 
@@ -159,6 +165,8 @@ class BookingController extends Controller
             $booking->bed?->update(['status' => Bed::STATUS_AVAILABLE]);
         });
 
+        $this->auditLog->log($request->user(), $booking->hotel_id, 'booking.rejected', $booking, [], ['status' => Booking::STATUS_REJECTED, 'reason' => $request->input('reason')]);
+
         return response()->json($booking->fresh());
     }
 
@@ -167,6 +175,8 @@ class BookingController extends Controller
         $this->authorizeManage($request->user(), $booking->hotel);
 
         $request->validate(['bed_id' => ['required', 'exists:beds,id']]);
+
+        $previousBedId = $booking->bed_id;
 
         DB::transaction(function () use ($booking, $request) {
             $newBed = $this->lockAndHoldBed($request->integer('bed_id'), $booking->hotel_id);
@@ -183,6 +193,15 @@ class BookingController extends Controller
             }
         });
 
+        $this->auditLog->log(
+            $request->user(),
+            $booking->hotel_id,
+            'booking.bed_reassigned',
+            $booking,
+            ['bed_id' => $previousBedId],
+            ['bed_id' => $booking->fresh()->bed_id]
+        );
+
         return response()->json($booking->fresh()->load(['room', 'bed']));
     }
 
@@ -194,6 +213,8 @@ class BookingController extends Controller
         abort_unless(in_array($booking->status, [Booking::STATUS_ACTIVE, Booking::STATUS_APPROVED], true), 422);
 
         $cycle = $this->voucherService->createNextCycle($booking);
+
+        $this->auditLog->log($request->user(), $booking->hotel_id, 'voucher.generated', $cycle->voucher, [], ['voucher_number' => $cycle->voucher->voucher_number]);
 
         return response()->json($cycle, 201);
     }
@@ -221,6 +242,8 @@ class BookingController extends Controller
 
             return $foodBill;
         });
+
+        $this->auditLog->log($request->user(), $booking->hotel_id, 'booking.checked_out', $booking, [], ['status' => Booking::STATUS_CHECKED_OUT, 'settled_food_bill' => $foodBill]);
 
         return response()->json($booking->fresh()->toArray() + ['settled_food_bill' => $foodBill]);
     }
