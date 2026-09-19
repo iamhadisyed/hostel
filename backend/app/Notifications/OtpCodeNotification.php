@@ -2,11 +2,14 @@
 
 namespace App\Notifications;
 
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class OtpCodeNotification extends Notification
+class OtpCodeNotification extends Notification implements ShouldQueue
 {
+    use \Illuminate\Bus\Queueable;
+
     public function __construct(private readonly string $code, private readonly int $expiryMinutes) {}
 
     public function via(object $notifiable): array

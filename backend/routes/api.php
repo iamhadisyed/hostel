@@ -22,8 +22,10 @@ use App\Http\Controllers\Api\VisitorPassController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/login', [AuthController::class, 'login']);
+Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/auth/register', [AuthController::class, 'register']);
+    Route::post('/auth/login', [AuthController::class, 'login']);
+});
 
 // Public, read-only room/seat availability - visible even before registration/verification.
 Route::get('/hotels/{hotel}/availability', [AvailabilityController::class, 'show']);
@@ -32,8 +34,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
 
-    Route::post('/otp/send', [OtpController::class, 'send']);
-    Route::post('/otp/verify', [OtpController::class, 'verify']);
+    Route::middleware('throttle:6,1')->group(function () {
+        Route::post('/otp/send', [OtpController::class, 'send']);
+        Route::post('/otp/verify', [OtpController::class, 'verify']);
+    });
 
     Route::get('/hotels', [HotelController::class, 'index']);
     Route::get('/hotels/{hotel}', [HotelController::class, 'show']);
