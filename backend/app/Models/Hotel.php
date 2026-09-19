@@ -77,4 +77,14 @@ class Hotel extends Model
     {
         return $this->hasMany(MenuItem::class);
     }
+
+    public function feedback(): HasMany
+    {
+        return $this->hasMany(Feedback::class);
+    }
+
+    public function visitorPasses(): HasMany
+    {
+        return $this->hasMany(VisitorPass::class);
+    }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AvailabilityController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\HotelAccountController;
 use App\Http\Controllers\Api\HotelController;
 use App\Http\Controllers\Api\MenuItemController;
@@ -14,7 +15,9 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OtpController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PayrollController;
+use App\Http\Controllers\Api\PresenceLogController;
 use App\Http\Controllers\Api\StaffController;
+use App\Http\Controllers\Api\VisitorPassController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
@@ -97,4 +100,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/bookings/{booking}/orders', [OrderController::class, 'index']);
     Route::post('/orders', [OrderController::class, 'store']);
+
+    Route::post('/bookings/{booking}/feedback', [FeedbackController::class, 'store']);
+    Route::middleware('role:'.User::ROLE_SUPER_ADMIN.','.User::ROLE_OWNER.','.User::ROLE_WARDEN)->group(function () {
+        Route::get('/hotels/{hotel}/feedback', [FeedbackController::class, 'index']);
+    });
+
+    Route::middleware('role:'.User::ROLE_SUPER_ADMIN.','.User::ROLE_OWNER.','.User::ROLE_WARDEN.','.User::ROLE_FRONT_DESK)->group(function () {
+        Route::get('/bookings/{booking}/presence', [PresenceLogController::class, 'index']);
+        Route::post('/bookings/{booking}/presence', [PresenceLogController::class, 'store']);
+
+        Route::get('/hotels/{hotel}/visitor-passes', [VisitorPassController::class, 'index']);
+        Route::post('/hotels/{hotel}/visitor-passes', [VisitorPassController::class, 'store']);
+        Route::patch('/hotels/{hotel}/visitor-passes/{visitorPass}/checkout', [VisitorPassController::class, 'checkout']);
+    });
 });
