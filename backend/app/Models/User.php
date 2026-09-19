@@ -70,6 +70,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Document::class);
     }
 
+    public function otps(): HasMany
+    {
+        return $this->hasMany(Otp::class);
+    }
+
     public function isSuperAdmin(): bool
     {
         return $this->role === self::ROLE_SUPER_ADMIN;
