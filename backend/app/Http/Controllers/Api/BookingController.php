@@ -131,6 +131,12 @@ class BookingController extends Controller
 
         abort_unless($booking->status === Booking::STATUS_PENDING, 422, 'Only pending bookings can be approved.');
 
+        abort_if(
+            $booking->verification_method === 'otp' && ! $booking->guest->hasVerifiedEmail(),
+            422,
+            'This guest has not verified their email yet. A voucher cannot be generated until they do.'
+        );
+
         $cycle = DB::transaction(function () use ($booking, $request) {
             $booking->update([
                 'status' => Booking::STATUS_APPROVED,
