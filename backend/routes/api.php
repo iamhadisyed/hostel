@@ -1,12 +1,14 @@
 <?php
 
+use App\Http\Controllers\Api\AnalyticsController;
+use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AvailabilityController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\DocumentController;
+use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\HotelAccountController;
 use App\Http\Controllers\Api\HotelController;
-use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\OtpController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PayrollController;
@@ -72,5 +74,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/staff/{staff}/payroll', [PayrollController::class, 'index']);
         Route::post('/staff/{staff}/payroll', [PayrollController::class, 'store']);
         Route::patch('/payroll/{payroll}/pay', [PayrollController::class, 'pay']);
+
+        Route::get('/hotels/{hotel}/expenses', [ExpenseController::class, 'index']);
+        Route::post('/hotels/{hotel}/expenses', [ExpenseController::class, 'store']);
+    });
+
+    Route::middleware('role:'.User::ROLE_SUPER_ADMIN.','.User::ROLE_OWNER)->group(function () {
+        Route::patch('/hotels/{hotel}/expenses/{expense}/review', [ExpenseController::class, 'review']);
+        Route::get('/analytics/summary', [AnalyticsController::class, 'summary']);
     });
 });
