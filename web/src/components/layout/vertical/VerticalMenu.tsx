@@ -20,6 +20,10 @@ import StyledVerticalNavExpandIcon from '@menu/styles/vertical/StyledVerticalNav
 import menuItemStyles from '@core/styles/vertical/menuItemStyles'
 import menuSectionStyles from '@core/styles/vertical/menuSectionStyles'
 
+// App Imports
+import { useAuth } from '@/contexts/AuthContext'
+import { roleMenus } from '@/data/navigation/roleMenus'
+
 type RenderExpandIconProps = {
   open?: boolean
   transitionDuration?: VerticalMenuContextProps['transitionDuration']
@@ -39,6 +43,9 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
   // Hooks
   const theme = useTheme()
   const verticalNavOptions = useVerticalNav()
+  const { user } = useAuth()
+
+  const items = user ? roleMenus[user.role] : []
 
   // Vars
   const { isBreakpointReached, transitionDuration } = verticalNavOptions
@@ -68,12 +75,11 @@ const VerticalMenu = ({ scrollMenu }: Props) => {
         renderExpandedMenuItemIcon={{ icon: <i className='ri-circle-fill' /> }}
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
-        <MenuItem href='/home' icon={<i className='ri-home-smile-line' />}>
-          Home
-        </MenuItem>
-        <MenuItem href='/about' icon={<i className='ri-information-line' />}>
-          About
-        </MenuItem>
+        {items.map(item => (
+          <MenuItem key={item.href} href={item.href} icon={<i className={item.icon} />}>
+            {item.label}
+          </MenuItem>
+        ))}
       </Menu>
       {/* <Menu
         popoutMenuOffset={{ mainAxis: 17 }}

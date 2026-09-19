@@ -1,47 +1,33 @@
 'use client'
 
-// React Imports
 import { useState } from 'react'
 
-// Next Imports
 import { useRouter } from 'next/navigation'
 
-// MUI Imports
 import Typography from '@mui/material/Typography'
 import TextField from '@mui/material/TextField'
-import IconButton from '@mui/material/IconButton'
-import InputAdornment from '@mui/material/InputAdornment'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 
-// Third-party Imports
 import classnames from 'classnames'
 
-// Type Imports
 import type { Mode } from '@core/types'
 
-// Component Imports
 import Link from '@components/Link'
 import Logo from '@components/layout/shared/Logo'
 
-// Config Imports
 import themeConfig from '@configs/themeConfig'
 
-// Hook Imports
 import { useImageVariant } from '@core/hooks/useImageVariant'
 import { useSettings } from '@core/hooks/useSettings'
-import { useAuth, homeRouteForRole } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { ApiError } from '@/libs/api'
 
-const LoginV2 = ({ mode }: { mode: Mode }) => {
-  // States
-  const [isPasswordShown, setIsPasswordShown] = useState(false)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+const Register = ({ mode }: { mode: Mode }) => {
+  const [form, setForm] = useState({ name: '', email: '', password: '', password_confirmation: '', phone: '' })
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  // Vars
   const darkImg = '/images/pages/auth-v2-mask-1-dark.png'
   const lightImg = '/images/pages/auth-v2-mask-1-light.png'
   const darkIllustration = '/images/illustrations/auth/v2-login-dark.png'
@@ -49,10 +35,9 @@ const LoginV2 = ({ mode }: { mode: Mode }) => {
   const borderedDarkIllustration = '/images/illustrations/auth/v2-login-dark-border.png'
   const borderedLightIllustration = '/images/illustrations/auth/v2-login-light-border.png'
 
-  // Hooks
   const router = useRouter()
   const { settings } = useSettings()
-  const { login } = useAuth()
+  const { register } = useAuth()
   const authBackground = useImageVariant(mode, lightImg, darkImg)
 
   const characterIllustration = useImageVariant(
@@ -63,19 +48,20 @@ const LoginV2 = ({ mode }: { mode: Mode }) => {
     borderedDarkIllustration
   )
 
-  const handleClickShowPassword = () => setIsPasswordShown(show => !show)
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setSubmitting(true)
 
     try {
-      const user = await login(email, password)
-
-      router.push(homeRouteForRole(user.role))
+      await register(form)
+      router.push('/verify-otp')
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.')
+      if (err instanceof ApiError && err.errors) {
+        setError(Object.values(err.errors).flat().join(' '))
+      } else {
+        setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.')
+      }
     } finally {
       setSubmitting(false)
     }
@@ -86,9 +72,7 @@ const LoginV2 = ({ mode }: { mode: Mode }) => {
       <div
         className={classnames(
           'flex bs-full items-center justify-center flex-1 min-bs-[100dvh] relative p-6 max-md:hidden',
-          {
-            'border-ie': settings.skin === 'bordered'
-          }
+          { 'border-ie': settings.skin === 'bordered' }
         )}
       >
         <div className='pli-6 max-lg:mbs-40 lg:mbe-24'>
@@ -106,51 +90,58 @@ const LoginV2 = ({ mode }: { mode: Mode }) => {
         </Link>
         <div className='flex flex-col gap-5 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset] mbs-11 sm:mbs-14 md:mbs-0'>
           <div>
-            <Typography variant='h4'>{`Welcome to ${themeConfig.templateName}! 👋🏻`}</Typography>
-            <Typography className='mbs-1'>Please sign-in to your account and start the adventure</Typography>
+            <Typography variant='h4'>{`Register your stay at ${themeConfig.templateName}`}</Typography>
+            <Typography className='mbs-1'>
+              Browse room availability, then create an account to submit your booking request.
+            </Typography>
           </div>
           {error && <Alert severity='error'>{error}</Alert>}
           <form noValidate autoComplete='off' onSubmit={handleSubmit} className='flex flex-col gap-5'>
             <TextField
               autoFocus
               fullWidth
+              label='Full Name'
+              required
+              value={form.name}
+              onChange={e => setForm({ ...form, name: e.target.value })}
+            />
+            <TextField
+              fullWidth
               label='Email'
               type='email'
-              value={email}
-              onChange={e => setEmail(e.target.value)}
               required
+              value={form.email}
+              onChange={e => setForm({ ...form, email: e.target.value })}
+            />
+            <TextField
+              fullWidth
+              label='Phone'
+              value={form.phone}
+              onChange={e => setForm({ ...form, phone: e.target.value })}
             />
             <TextField
               fullWidth
               label='Password'
-              type={isPasswordShown ? 'text' : 'password'}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
+              type='password'
               required
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position='end'>
-                      <IconButton
-                        size='small'
-                        edge='end'
-                        onClick={handleClickShowPassword}
-                        onMouseDown={e => e.preventDefault()}
-                      >
-                        <i className={isPasswordShown ? 'ri-eye-off-line' : 'ri-eye-line'} />
-                      </IconButton>
-                    </InputAdornment>
-                  )
-                }
-              }}
+              value={form.password}
+              onChange={e => setForm({ ...form, password: e.target.value })}
+            />
+            <TextField
+              fullWidth
+              label='Confirm Password'
+              type='password'
+              required
+              value={form.password_confirmation}
+              onChange={e => setForm({ ...form, password_confirmation: e.target.value })}
             />
             <Button fullWidth variant='contained' type='submit' disabled={submitting}>
-              {submitting ? 'Logging in...' : 'Log In'}
+              {submitting ? 'Creating account...' : 'Register'}
             </Button>
             <div className='flex justify-center items-center flex-wrap gap-2'>
-              <Typography>New guest?</Typography>
-              <Typography component={Link} href='/register' color='primary.main'>
-                Create an account
+              <Typography>Already have an account?</Typography>
+              <Typography component={Link} href='/login' color='primary.main'>
+                Log in
               </Typography>
             </div>
           </form>
@@ -160,4 +151,4 @@ const LoginV2 = ({ mode }: { mode: Mode }) => {
   )
 }
 
-export default LoginV2
+export default Register

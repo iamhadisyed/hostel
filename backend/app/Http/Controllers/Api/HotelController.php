@@ -28,8 +28,11 @@ class HotelController extends Controller
 
         if ($user->isOwner()) {
             $query->where('owner_id', $user->id);
-        } elseif (! $user->isSuperAdmin()) {
+        } elseif ($user->isWarden() || $user->isFrontDesk()) {
             $query->where('id', $user->hotel_id);
+        } elseif ($user->isStudent()) {
+            // Guests browse all active properties before choosing where to book.
+            $query->where('is_active', true);
         }
 
         return response()->json($query->get());
