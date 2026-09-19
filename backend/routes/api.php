@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\HotelAccountController;
 use App\Http\Controllers\Api\HotelController;
+use App\Http\Controllers\Api\MenuItemController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OtpController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PayrollController;
@@ -83,4 +85,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/hotels/{hotel}/expenses/{expense}/review', [ExpenseController::class, 'review']);
         Route::get('/analytics/summary', [AnalyticsController::class, 'summary']);
     });
+
+    Route::get('/hotels/{hotel}/menu', [MenuItemController::class, 'index']);
+    Route::middleware('role:'.User::ROLE_SUPER_ADMIN.','.User::ROLE_OWNER.','.User::ROLE_WARDEN)->group(function () {
+        Route::post('/hotels/{hotel}/menu', [MenuItemController::class, 'store']);
+        Route::patch('/hotels/{hotel}/menu/{menuItem}', [MenuItemController::class, 'update']);
+        Route::delete('/hotels/{hotel}/menu/{menuItem}', [MenuItemController::class, 'destroy']);
+
+        Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus']);
+    });
+
+    Route::get('/bookings/{booking}/orders', [OrderController::class, 'index']);
+    Route::post('/orders', [OrderController::class, 'store']);
 });

@@ -204,7 +204,13 @@ class BookingController extends Controller
 
         abort_unless($booking->status === Booking::STATUS_ACTIVE, 422, 'Only active bookings can be checked out.');
 
-        DB::transaction(function () use ($booking, $request) {
+        $foodBill = DB::transaction(function () use ($booking, $request) {
+            $unpaidOrders = $booking->orders()->where('payment_status', \App\Models\Order::PAYMENT_UNPAID)->get();
+            $foodBill = $unpaidOrders->sum('total');
+
+            $booking->orders()->where('payment_status', \App\Models\Order::PAYMENT_UNPAID)
+                ->update(['payment_status' => \App\Models\Order::PAYMENT_PAID]);
+
             $booking->update([
                 'status' => Booking::STATUS_CHECKED_OUT,
                 'checked_out_by' => $request->user()->id,
@@ -212,9 +218,11 @@ class BookingController extends Controller
             ]);
 
             $booking->bed?->update(['status' => Bed::STATUS_AVAILABLE]);
+
+            return $foodBill;
         });
 
-        return response()->json($booking->fresh());
+        return response()->json($booking->fresh()->toArray() + ['settled_food_bill' => $foodBill]);
     }
 
     private function lockAndHoldBed(int $bedId, int $hotelId): Bed
