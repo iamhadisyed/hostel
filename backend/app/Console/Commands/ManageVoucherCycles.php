@@ -32,21 +32,18 @@ class ManageVoucherCycles extends Command
         Booking::query()
             ->where('is_recurring', true)
             ->whereIn('status', [Booking::STATUS_ACTIVE, Booking::STATUS_APPROVED])
-            ->whereHas('cycles', function ($query) use ($horizon) {
-                $query->where('period_end', '<=', $horizon->toDateString());
-            })
             ->with('cycles')
-            ->each(function (Booking $booking) use ($voucherService) {
+            ->get()
+            ->each(function (Booking $booking) use ($voucherService, $horizon) {
                 $latestCycle = $booking->cycles->sortByDesc('period_end')->first();
 
                 if (! $latestCycle) {
                     return;
                 }
 
-                $alreadyHasNextCycle = $booking->cycles
-                    ->contains(fn (BookingCycle $cycle) => $cycle->period_start->gt($latestCycle->period_end));
-
-                if ($alreadyHasNextCycle) {
+                // The latest cycle already extends past the lead window, so the
+                // next cycle either isn't due yet or was already generated.
+                if (Carbon::parse($latestCycle->period_end)->gt($horizon)) {
                     return;
                 }
 

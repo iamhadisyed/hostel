@@ -82,9 +82,12 @@ class BookingController extends Controller
     public function storeWalkIn(CreateWalkInBookingRequest $request): JsonResponse
     {
         $actor = $request->user();
+        $hotel = Hotel::findOrFail($request->integer('hotel_id'));
 
         abort_unless(
-            in_array($actor->role, [User::ROLE_FRONT_DESK, User::ROLE_WARDEN, User::ROLE_OWNER, User::ROLE_SUPER_ADMIN], true),
+            $actor->isSuperAdmin()
+                || ($actor->isOwner() && $hotel->owner_id === $actor->id)
+                || (in_array($actor->role, [User::ROLE_WARDEN, User::ROLE_FRONT_DESK], true) && $actor->hotel_id === $hotel->id),
             403
         );
 
