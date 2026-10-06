@@ -18,25 +18,30 @@ import VerticalFooter from '@components/layout/vertical/Footer'
 import HorizontalFooter from '@components/layout/horizontal/Footer'
 import ScrollToTop from '@core/components/scroll-to-top'
 
-// Util Imports
-import { getMode, getSystemMode } from '@core/utils/serverHelpers'
+// Config Imports
+import themeConfig from '@configs/themeConfig'
 
-const Layout = async (props: ChildrenType) => {
+// These are only the initial static-paint fallback (no server/cookie to read
+// at request time under static export); useLayoutInit/ModeChanger/useSettings
+// correct the real value client-side immediately after mount.
+const FALLBACK_SYSTEM_MODE = 'light' as const
+
+const Layout = (props: ChildrenType) => {
   const { children } = props
-
-  // Type guard to ensure lang is a valid Locale
 
   // Vars
   const direction = 'ltr'
-  const mode = await getMode()
-  const systemMode = await getSystemMode()
 
   return (
     <Providers direction={direction}>
       <LayoutWrapper
-        systemMode={systemMode}
+        systemMode={FALLBACK_SYSTEM_MODE}
         verticalLayout={
-          <VerticalLayout navigation={<Navigation mode={mode} />} navbar={<Navbar />} footer={<VerticalFooter />}>
+          <VerticalLayout
+            navigation={<Navigation mode={themeConfig.mode === 'dark' ? 'dark' : 'light'} />}
+            navbar={<Navbar />}
+            footer={<VerticalFooter />}
+          >
             {children}
           </VerticalLayout>
         }

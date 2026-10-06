@@ -32,12 +32,16 @@ import defaultCoreTheme from '@core/theme'
 
 type Props = ChildrenType & {
   direction: Direction
-  systemMode: SystemMode
+  // Optional: with no server available to resolve the real cookie/media-query
+  // preference ahead of time, this just seeds the very first static paint.
+  // useLayoutInit/ModeChanger already correct the live value client-side
+  // immediately after mount via the 'colorPref' cookie and a live media query.
+  systemMode?: SystemMode
 }
 
 const CustomThemeProvider = (props: Props) => {
   // Props
-  const { children, direction, systemMode } = props
+  const { children, direction, systemMode = 'light' } = props
 
   // Hooks
   const { settings } = useSettings()

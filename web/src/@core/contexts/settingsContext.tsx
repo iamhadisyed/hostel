@@ -2,7 +2,7 @@
 
 // React Imports
 import type { ReactNode } from 'react'
-import { createContext, useMemo, useState } from 'react'
+import { createContext, useEffect, useMemo, useState } from 'react'
 
 // Type Imports
 import type { Mode, Skin, Layout, LayoutComponentWidth } from '@core/types'
@@ -42,42 +42,42 @@ type SettingsContextProps = {
 
 type Props = {
   children: ReactNode
-  settingsCookie: Settings | null
-  mode?: Mode
 }
 
 // Initial Settings Context
 export const SettingsContext = createContext<SettingsContextProps | null>(null)
 
+// Settings shipped in the statically exported HTML - must stay independent of
+// any request (no cookies), since there's no server to read them from.
+const initialSettings: Settings = {
+  mode: themeConfig.mode,
+  skin: themeConfig.skin,
+  semiDark: themeConfig.semiDark,
+  layout: themeConfig.layout,
+  navbarContentWidth: themeConfig.navbar.contentWidth,
+  contentWidth: themeConfig.contentWidth,
+  footerContentWidth: themeConfig.footer.contentWidth,
+  primaryColor: primaryColorConfig[0].main
+}
+
 // Settings Provider
 export const SettingsProvider = (props: Props) => {
-  // Initial Settings
-  const initialSettings: Settings = {
-    mode: themeConfig.mode,
-    skin: themeConfig.skin,
-    semiDark: themeConfig.semiDark,
-    layout: themeConfig.layout,
-    navbarContentWidth: themeConfig.navbar.contentWidth,
-    contentWidth: themeConfig.contentWidth,
-    footerContentWidth: themeConfig.footer.contentWidth,
-    primaryColor: primaryColorConfig[0].main
-  }
+  // Cookies (client-only; reads document.cookie on mount)
+  const [settingsCookie, updateSettingsCookie] = useObjectCookie<Settings>(themeConfig.settingsCookieName, initialSettings)
 
-  const updatedInitialSettings = {
-    ...initialSettings,
-    mode: props.mode || themeConfig.mode
-  }
+  // State - always starts from the static defaults so the first client render
+  // matches the statically exported HTML exactly. The saved cookie (if any) is
+  // applied in the effect below, after mount, to avoid a hydration mismatch.
+  // This means a brief flash of the default theme on first load, which is an
+  // acceptable tradeoff for static export.
+  const [_settingsState, _updateSettingsState] = useState<Settings>(initialSettings)
 
-  // Cookies
-  const [settingsCookie, updateSettingsCookie] = useObjectCookie<Settings>(
-    themeConfig.settingsCookieName,
-    JSON.stringify(props.settingsCookie) !== '{}' ? props.settingsCookie : updatedInitialSettings
-  )
-
-  // State
-  const [_settingsState, _updateSettingsState] = useState<Settings>(
-    JSON.stringify(settingsCookie) !== '{}' ? settingsCookie : updatedInitialSettings
-  )
+  useEffect(() => {
+    if (JSON.stringify(settingsCookie) !== '{}' && JSON.stringify(settingsCookie) !== JSON.stringify(initialSettings)) {
+      _updateSettingsState(settingsCookie)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const updateSettings = (settings: Partial<Settings>, options?: UpdateSettingsOptions) => {
     const { updateCookie = true } = options || {}

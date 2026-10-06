@@ -1,31 +1,27 @@
-// Type Imports
-import type { ChildrenType } from '@core/types'
-
 // Component Imports
 import Providers from '@components/Providers'
 import BlankLayout from '@layouts/BlankLayout'
+import NotFound from '@views/NotFound'
 
 // Config Imports
 import themeConfig from '@configs/themeConfig'
-
-type Props = ChildrenType
 
 // Static fallback for the initial paint only (no server/cookie available
 // under static export); BlankLayout/useLayoutInit/ModeChanger correct the
 // live value client-side immediately after mount.
 const FALLBACK_SYSTEM_MODE = themeConfig.mode === 'dark' ? 'dark' : 'light'
 
-const Layout = (props: Props) => {
-  const { children } = props
-
+const NotFoundPage = () => {
   // Vars
   const direction = 'ltr'
 
   return (
     <Providers direction={direction}>
-      <BlankLayout systemMode={FALLBACK_SYSTEM_MODE}>{children}</BlankLayout>
+      <BlankLayout systemMode={FALLBACK_SYSTEM_MODE}>
+        <NotFound mode={themeConfig.mode} />
+      </BlankLayout>
     </Providers>
   )
 }
 
-export default Layout
+export default NotFoundPage
