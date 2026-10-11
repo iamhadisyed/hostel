@@ -17,8 +17,12 @@ import '@/app/globals.css'
 import '@assets/iconify-icons/generated-icons.css'
 
 export const metadata = {
-  title: 'Materialize - Material Next.js Admin Template',
-  description: 'Materialize - Material Next.js Admin Template'
+  title: 'Hostel Management System',
+  description: 'Hostel Management System — bookings, staff, payments, and operations for hostels and hotels.',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png'
+  }
 }
 
 const RootLayout = (props: ChildrenType) => {

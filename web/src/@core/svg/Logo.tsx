@@ -3,75 +3,18 @@ import type { SVGAttributes } from 'react'
 
 const Logo = (props: SVGAttributes<SVGElement>) => {
   return (
-    <svg width='40' height='22' viewBox='0 0 40 22' fill='none' xmlns='http://www.w3.org/2000/svg' {...props}>
-      <rect
-        width='7.37565'
-        height='21.1131'
-        rx='3.68783'
-        transform='matrix(-0.865206 0.501417 0.498585 0.866841 28.4115 0)'
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg' {...props}>
+      <path
+        d='M3 7.5C3 5.01472 5.01472 3 7.5 3H16.5C18.9853 3 21 5.01472 21 7.5V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V7.5Z'
         fill='var(--mui-palette-primary-main)'
       />
-      <rect
-        width='7.37565'
-        height='21.1131'
-        rx='3.68783'
-        transform='matrix(-0.865206 0.501417 0.498585 0.866841 28.4869 0)'
-        fill='url(#paint0_linear_448_114254)'
-        fillOpacity='0.4'
+      <path
+        d='M3 7.5C3 5.01472 5.01472 3 7.5 3H16.5C18.9853 3 21 5.01472 21 7.5V9H3V7.5Z'
+        fill='var(--mui-palette-primary-dark)'
       />
-      <rect
-        width='7.37565'
-        height='21.1131'
-        rx='3.68783'
-        transform='matrix(0.865206 0.501417 -0.498585 0.866841 25.6563 0)'
-        fill='var(--mui-palette-primary-main)'
-      />
-      <rect
-        width='7.37565'
-        height='21.1131'
-        rx='3.68783'
-        transform='matrix(-0.865206 0.501417 0.498585 0.866841 14.3293 0)'
-        fill='var(--mui-palette-primary-main)'
-      />
-      <rect
-        width='7.37565'
-        height='21.1131'
-        rx='3.68783'
-        transform='matrix(-0.865206 0.501417 0.498585 0.866841 14.3293 0)'
-        fill='url(#paint1_linear_448_114254)'
-        fillOpacity='0.4'
-      />
-      <rect
-        width='7.37565'
-        height='21.1131'
-        rx='3.68783'
-        transform='matrix(0.865206 0.501417 -0.498585 0.866841 11.5132 0)'
-        fill='var(--mui-palette-primary-main)'
-      />
-      <defs>
-        <linearGradient
-          id='paint0_linear_448_114254'
-          x1='3.68783'
-          y1='0'
-          x2='3.68783'
-          y2='21.1131'
-          gradientUnits='userSpaceOnUse'
-        >
-          <stop />
-          <stop offset='1' stopOpacity='0' />
-        </linearGradient>
-        <linearGradient
-          id='paint1_linear_448_114254'
-          x1='3.68783'
-          y1='0'
-          x2='3.68783'
-          y2='21.1131'
-          gradientUnits='userSpaceOnUse'
-        >
-          <stop />
-          <stop offset='1' stopOpacity='0' />
-        </linearGradient>
-      </defs>
+      <rect x='6.5' y='11' width='4' height='4' rx='1' fill='white' />
+      <rect x='13.5' y='11' width='4' height='4' rx='1' fill='white' />
+      <path d='M7 21V18C7 16.8954 7.89543 16 9 16H15C16.1046 16 17 16.8954 17 18V21H7Z' fill='white' />
     </svg>
   )
 }

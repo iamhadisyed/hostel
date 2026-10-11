@@ -50,9 +50,9 @@ export type Config = {
 }
 
 const themeConfig: Config = {
-  templateName: 'Materialize',
+  templateName: 'Hostel Management System',
   homePageUrl: '/home',
-  settingsCookieName: 'materialize-mui-next-demo-1',
+  settingsCookieName: 'hostel-management-settings',
   mode: 'system', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'
   semiDark: false, // true, false

@@ -2,14 +2,14 @@
 
 namespace App\Notifications;
 
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class OtpCodeNotification extends Notification implements ShouldQueue
+// Sent synchronously (not ShouldQueue): shared hosting has no queue worker
+// process, so a queued notification would just sit in the `jobs` table and
+// the OTP email would never actually go out.
+class OtpCodeNotification extends Notification
 {
-    use \Illuminate\Bus\Queueable;
-
     public function __construct(private readonly string $code, private readonly int $expiryMinutes) {}
 
     public function via(object $notifiable): array
