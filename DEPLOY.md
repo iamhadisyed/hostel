@@ -4,6 +4,10 @@
 
 This repo contains a Laravel 12 API backend (`backend/`) and a Next.js 16 static-exported frontend (`web/`). The backend is deployed as plain PHP under GoDaddy's shared-hosting Apache/PHP stack; the frontend is built to static HTML/CSS/JS and uploaded as files — no Node.js process runs on the server for either component. (A `mobile/` React Native app also exists in this repo but is out of scope for this guide — it's not part of a web deployment.)
 
+**Live deployment:**
+- Frontend: https://hostel.aethercampus.com
+- Backend API: https://hostelapi.aethercampus.com
+
 ## Deployment Flow
 
 ```
@@ -31,7 +35,7 @@ Locate build output folder(s)
       │
       ▼
 Upload to GoDaddy — which folder goes where
-  backend/  → a subdomain's docroot pointed at backend/public  (e.g. api.yourdomain.com)
+  backend/  → a subdomain's docroot pointed at backend/public  (hostelapi.aethercampus.com)
   web/out/  → public_html (root domain) or another subdomain's docroot
       │
       ▼
@@ -61,7 +65,7 @@ Environment: copy `.env.example` to `.env`. These values MUST be set correctly f
 - `APP_ENV=production`
 - `APP_DEBUG=false` — never leave `true` in production, it leaks stack traces/secrets
 - `APP_KEY` — generate a fresh one with `php artisan key:generate` (don't reuse a dev key)
-- `APP_URL` — the live backend URL, e.g. `https://api.yourdomain.com`
+- `APP_URL` — the live backend URL: `https://hostelapi.aethercampus.com`
 - `DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` — the MySQL database GoDaddy provisions in cPanel
 - `SESSION_DRIVER=database` — fine as-is; requires the `sessions` table (created by the default migrations)
 - `QUEUE_CONNECTION=database` — fine as-is; nothing in the app currently dispatches queued jobs, so no worker process is needed
@@ -79,7 +83,8 @@ pnpm install
 
 Environment: create `web/.env.local` with:
 ```
-NEXT_PUBLIC_API_URL=https://api.yourdomain.com/api
+NEXT_PUBLIC_APP_URL=https://hostel.aethercampus.com
+NEXT_PUBLIC_API_URL=https://hostelapi.aethercampus.com/api
 ```
 This **must** point at the live backend URL *before* running the build — static exports bake this value into the generated HTML/JS at build time; changing it after the build has no effect and requires a rebuild.
 
@@ -95,8 +100,8 @@ Confirm the output folder produced: `web/out/` (verified — contains 20 pre-ren
 
 ### 5. GoDaddy folder placement
 
-- **Backend**: upload the entire `backend/` folder (including `vendor/`, built via `composer install` above) to a location *outside* `public_html` on GoDaddy — e.g. `~/laravel-app/`. Then point a subdomain (e.g. `api.yourdomain.com`) at `~/laravel-app/public` as its docroot, using cPanel → Domains → "Create A New Domain" (subdomain) with document root set to `laravel-app/public`. This keeps `.env`, `app/`, and everything else outside the web-servable root — don't point any public docroot directly at the `backend/` folder itself, only at its `public` subfolder.
-- **Frontend**: upload the *contents* of `web/out/` (not the `out` folder itself) into `public_html` if this is meant to be the main site at the root domain, or into a subdomain's docroot if you're keeping the root domain for something else. Given this project has one frontend serving all roles (owner/warden/front-desk/student/super-admin), the root domain is the natural choice.
+- **Backend**: upload the entire `backend/` folder (including `vendor/`, built via `composer install` above) to a location *outside* `public_html` on GoDaddy — e.g. `~/laravel-app/`. Then point the `hostelapi.aethercampus.com` subdomain at `~/laravel-app/public` as its docroot, using cPanel → Domains → "Create A New Domain" (subdomain) with document root set to `laravel-app/public`. This keeps `.env`, `app/`, and everything else outside the web-servable root — don't point any public docroot directly at the `backend/` folder itself, only at its `public` subfolder.
+- **Frontend**: upload the *contents* of `web/out/` (not the `out` folder itself) into the `hostel.aethercampus.com` subdomain's docroot. Given this project has one frontend serving all roles (owner/warden/front-desk/student/super-admin), one subdomain for the whole panel is the natural choice.
 - No other frontend/app folders exist in this repo that need separate placement (the `mobile/` app isn't deployed to GoDaddy).
 
 ### 6. .htaccess
@@ -132,9 +137,9 @@ php artisan storage:link
 (`storage:link` only matters if you set `FILESYSTEM_DISK=local` — see Known Issues.)
 
 ### 8. Verification checklist
-- [ ] Homepage loads (`https://yourdomain.com`)
-- [ ] Refreshing a deep/nested route (e.g. `https://yourdomain.com/owner/accounts`) does not 404
-- [ ] A real API call from frontend to backend succeeds — e.g. the login page's request reaches `https://api.yourdomain.com/api/...` and returns data, not a CORS or 404 error
+- [ ] Homepage loads (`https://hostel.aethercampus.com`)
+- [ ] Refreshing a deep/nested route (e.g. `https://hostel.aethercampus.com/owner/accounts`) does not 404
+- [ ] A real API call from frontend to backend succeeds — e.g. the login page's request reaches `https://hostelapi.aethercampus.com/api/...` and returns data, not a CORS or 404 error
 - [ ] Login/auth flow works end to end (token issued by Sanctum, stored client-side, sent as `Authorization: Bearer` on subsequent requests)
 - [ ] The daily `vouchers:manage-cycles` scheduled command actually runs — check `storage/logs/laravel.log` a day after setup, or run it manually once via SSH/cPanel Terminal to confirm it doesn't error
 - [ ] Uploading/downloading a document or payroll PDF works (exercises whichever `FILESYSTEM_DISK` you configured)
@@ -147,6 +152,6 @@ php artisan storage:link
   ```
   Without this, the daily `vouchers:manage-cycles` command silently never runs.
 - **`FILESYSTEM_DISK` defaults to `s3` in `.env.example`.** If you don't set up an S3-compatible bucket and AWS credentials, file uploads (`DocumentController`, payroll PDFs in `PayrollController`) will fail. Either provision S3 (or a compatible service) and fill in the `AWS_*` vars, or switch to `FILESYSTEM_DISK=local` and run `php artisan storage:link` so uploaded files are served from `backend/storage/app/public` via the `public/storage` symlink.
-- **CORS has no published `config/cors.php`.** The app relies on Laravel's built-in default (allow-all on `api/*`), which works but is permissive. Consider publishing and restricting `allowed_origins` to your actual frontend domain(s) once deployed.
+- **CORS allowed origins come from `CORS_ALLOWED_ORIGINS`** (`backend/config/cors.php`), comma-separated. In production this is set to `https://hostel.aethercampus.com` — if another frontend domain is added later, include it here too (comma-separated), then `php artisan config:clear`.
 - **`MAIL_MAILER=log` in `.env.example`.** Left as-is, OTP/notification emails are written to the log file instead of actually sent — set real SMTP credentials for production.
 - **Backend's `npm run build` only affects Laravel's unused default welcome page** (`GET /` → `resources/views/welcome.blade.php`). Skipping it means that one route throws a Vite-manifest error if ever hit directly — harmless for the real app (the frontend and API routes don't touch it), but worth building anyway so the bare backend domain doesn't show an error page if someone visits it directly.
