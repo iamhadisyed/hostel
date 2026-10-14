@@ -2,13 +2,11 @@ import React, { useCallback, useState } from 'react'
 import { Modal, View } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 
-import { Badge, Button, Card, ErrorText, Field, H1, H2, Muted, Screen } from '../../components/ui'
+import { Button, Card, ErrorText, Field, H1, H2, Muted, Screen, StatusBadge } from '../../components/ui'
 import { api, ApiError } from '../../libs/api'
 import { useAuth } from '../../contexts/AuthContext'
 import { useMyHotels } from '../../hooks/useMyHotels'
-import type { Expense, ExpenseStatus } from '../../types/api'
-
-const statusColor: Record<ExpenseStatus, string> = { pending: '#FF9F43', approved: '#28C76F', rejected: '#EA5455' }
+import type { Expense } from '../../types/api'
 
 const ExpensesScreen = () => {
   const { user } = useAuth()
@@ -97,7 +95,7 @@ const ExpensesScreen = () => {
         <Card key={expense.id}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <H2>Rs. {expense.amount}</H2>
-            <Badge label={expense.status} color={statusColor[expense.status]} />
+            <StatusBadge status={expense.status} />
           </View>
           <Muted>
             {expense.category.replace('_', ' ')} - {expense.vendor ?? 'No vendor'} - {expense.date}

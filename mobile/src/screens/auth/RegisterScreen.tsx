@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { Alert, Pressable, Text, View } from 'react-native'
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 
-import { Button, ErrorText, Field, H1, Muted, Screen } from '../../components/ui'
+import { Button, ErrorText, Field, Screen, colors } from '../../components/ui'
+import { fontFamily, spacing, type } from '../../theme/tokens'
 import { useAuth } from '../../contexts/AuthContext'
 import { ApiError } from '../../libs/api'
 import type { AuthStackParamList } from '../../navigation/types'
@@ -38,29 +39,50 @@ const RegisterScreen = ({ navigation }: Props) => {
 
   return (
     <Screen>
-      <View style={{ gap: 4, marginTop: 24 }}>
-        <H1>Create your account</H1>
-        <Muted>Browse rooms, then register to submit a booking request</Muted>
+      <View style={styles.header}>
+        <Text style={styles.title}>Create your account</Text>
+        <Text style={styles.subtitle}>Browse rooms, then register to submit a booking request</Text>
       </View>
 
       <ErrorText>{error}</ErrorText>
 
-      <Field label='Full Name' value={form.name} onChangeText={v => setForm({ ...form, name: v })} />
-      <Field label='Email' value={form.email} onChangeText={v => setForm({ ...form, email: v })} keyboardType='email-address' />
-      <Field label='Phone' value={form.phone} onChangeText={v => setForm({ ...form, phone: v })} keyboardType='phone-pad' />
-      <Field label='Password' value={form.password} onChangeText={v => setForm({ ...form, password: v })} secureTextEntry />
-      <Field
-        label='Confirm Password'
-        value={form.password_confirmation}
-        onChangeText={v => setForm({ ...form, password_confirmation: v })}
-        secureTextEntry
-      />
+      <View style={{ gap: spacing.sm }}>
+        <Field label='Full Name' icon='person-outline' value={form.name} onChangeText={v => setForm({ ...form, name: v })} />
+        <Field
+          label='Email'
+          icon='mail-outline'
+          value={form.email}
+          onChangeText={v => setForm({ ...form, email: v })}
+          keyboardType='email-address'
+        />
+        <Field
+          label='Phone'
+          icon='call-outline'
+          value={form.phone}
+          onChangeText={v => setForm({ ...form, phone: v })}
+          keyboardType='phone-pad'
+        />
+        <Field
+          label='Password'
+          icon='lock-closed-outline'
+          value={form.password}
+          onChangeText={v => setForm({ ...form, password: v })}
+          secureTextEntry
+        />
+        <Field
+          label='Confirm Password'
+          icon='lock-closed-outline'
+          value={form.password_confirmation}
+          onChangeText={v => setForm({ ...form, password_confirmation: v })}
+          secureTextEntry
+        />
+      </View>
 
-      <Button title='Register' onPress={handleRegister} loading={loading} />
+      <Button title='Register' onPress={handleRegister} loading={loading} icon='arrow-forward' />
 
-      <Pressable onPress={() => navigation.navigate('Login')} style={{ alignItems: 'center', marginTop: 8 }}>
-        <Text>
-          Already have an account? <Text style={{ color: '#7367F0', fontWeight: '600' }}>Log In</Text>
+      <Pressable onPress={() => navigation.navigate('Login')} style={styles.loginRow}>
+        <Text style={styles.loginText}>
+          Already have an account? <Text style={styles.loginLink}>Log In</Text>
         </Text>
       </Pressable>
     </Screen>
@@ -68,3 +90,12 @@ const RegisterScreen = ({ navigation }: Props) => {
 }
 
 export default RegisterScreen
+
+const styles = StyleSheet.create({
+  header: { gap: 4, marginTop: spacing.sm },
+  title: { fontFamily: fontFamily.headingExtraBold, fontSize: 22, color: colors.textPrimary },
+  subtitle: { ...type.body, color: colors.textMuted },
+  loginRow: { alignItems: 'center', marginTop: spacing.xs },
+  loginText: { ...type.body, color: colors.textSecondary },
+  loginLink: { color: colors.accentDark, fontFamily: fontFamily.bodySemibold }
+})

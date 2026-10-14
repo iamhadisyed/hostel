@@ -2,18 +2,9 @@ import React, { useCallback, useState } from 'react'
 import { View } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 
-import { Badge, Button, Card, ErrorText, H1, H2, Muted, Screen } from '../../components/ui'
+import { Button, Card, ErrorText, H2, H1, Muted, Screen, StatusBadge } from '../../components/ui'
 import { api, ApiError } from '../../libs/api'
-import type { Booking, BookingStatus } from '../../types/api'
-
-const statusColor: Record<BookingStatus, string> = {
-  pending: '#FF9F43',
-  approved: '#00CFE8',
-  active: '#28C76F',
-  checked_out: '#6E6B7B',
-  rejected: '#EA5455',
-  cancelled: '#EA5455'
-}
+import type { Booking } from '../../types/api'
 
 const BookingCard = ({ booking, onChanged }: { booking: Booking; onChanged: () => void }) => {
   const [busy, setBusy] = useState(false)
@@ -40,7 +31,7 @@ const BookingCard = ({ booking, onChanged }: { booking: Booking; onChanged: () =
     <Card>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <H2>{booking.guest?.name ?? `Guest #${booking.user_id}`}</H2>
-        <Badge label={booking.status} color={statusColor[booking.status]} />
+        <StatusBadge status={booking.status} />
       </View>
       <Muted>
         Room {booking.room?.room_number ?? '-'} / Bed {booking.bed?.bed_number ?? '-'} - via {booking.created_by.replace('_', ' ')}

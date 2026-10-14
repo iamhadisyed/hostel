@@ -1,18 +1,30 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "StayPilot",
+    "slug": "staypilot",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "backgroundColor": "#F5F7FA",
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#102A4C"
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "package": "com.aethercampus.hostel",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#F5F7FA",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
