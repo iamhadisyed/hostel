@@ -9,44 +9,20 @@ import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 
-import classnames from 'classnames'
-
-import type { Mode } from '@core/types'
-
 import Link from '@components/Link'
 import Logo from '@components/layout/shared/Logo'
+import AuthHero from '@components/auth/AuthHero'
 
-import themeConfig from '@configs/themeConfig'
-
-import { useImageVariant } from '@core/hooks/useImageVariant'
-import { useSettings } from '@core/hooks/useSettings'
 import { useAuth } from '@/contexts/AuthContext'
 import { ApiError } from '@/libs/api'
 
-const Register = ({ mode }: { mode: Mode }) => {
+const Register = () => {
   const [form, setForm] = useState({ name: '', email: '', password: '', password_confirmation: '', phone: '' })
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  const darkImg = '/images/pages/auth-v2-mask-1-dark.png'
-  const lightImg = '/images/pages/auth-v2-mask-1-light.png'
-  const darkIllustration = '/images/illustrations/auth/v2-login-dark.png'
-  const lightIllustration = '/images/illustrations/auth/v2-login-light.png'
-  const borderedDarkIllustration = '/images/illustrations/auth/v2-login-dark-border.png'
-  const borderedLightIllustration = '/images/illustrations/auth/v2-login-light-border.png'
-
   const router = useRouter()
-  const { settings } = useSettings()
   const { register } = useAuth()
-  const authBackground = useImageVariant(mode, lightImg, darkImg)
-
-  const characterIllustration = useImageVariant(
-    mode,
-    lightIllustration,
-    darkIllustration,
-    borderedLightIllustration,
-    borderedDarkIllustration
-  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,31 +45,16 @@ const Register = ({ mode }: { mode: Mode }) => {
 
   return (
     <div className='flex bs-full justify-center'>
-      <div
-        className={classnames(
-          'flex bs-full items-center justify-center flex-1 min-bs-[100dvh] relative p-6 max-md:hidden',
-          { 'border-ie': settings.skin === 'bordered' }
-        )}
-      >
-        <div className='pli-6 max-lg:mbs-40 lg:mbe-24'>
-          <img
-            src={characterIllustration}
-            alt='character-illustration'
-            className='max-bs-[673px] max-is-full bs-auto'
-          />
-        </div>
-        <img src={authBackground} className='absolute bottom-[4%] z-[-1] is-full max-md:hidden' />
-      </div>
-      <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:!min-is-[unset] md:p-12 md:is-[480px]'>
+      <AuthHero title='Book your stay in minutes.' subtitle='Browse rooms, submit a request, and manage your stay from one account.' />
+
+      <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:!min-is-[unset] md:p-12 md:is-[480px] relative'>
         <Link className='absolute block-start-5 sm:block-start-[38px] inline-start-6 sm:inline-start-[38px]'>
           <Logo />
         </Link>
         <div className='flex flex-col gap-5 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset] mbs-11 sm:mbs-14 md:mbs-0'>
           <div>
-            <Typography variant='h4'>{`Register your stay at ${themeConfig.templateName}`}</Typography>
-            <Typography className='mbs-1'>
-              Browse room availability, then create an account to submit your booking request.
-            </Typography>
+            <Typography variant='h4'>Create your account</Typography>
+            <Typography className='mbs-1'>Browse room availability, then register to submit your booking request.</Typography>
           </div>
           {error && <Alert severity='error'>{error}</Alert>}
           <form noValidate autoComplete='off' onSubmit={handleSubmit} className='flex flex-col gap-5'>

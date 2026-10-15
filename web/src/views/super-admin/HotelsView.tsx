@@ -20,12 +20,15 @@ import Alert from '@mui/material/Alert'
 import { api, ApiError } from '@/libs/api'
 import type { Hotel } from '@/types/api'
 import CreateHotelDialog from './CreateHotelDialog'
+import BillingDialog from './BillingDialog'
 
 const HotelsView = () => {
   const [hotels, setHotels] = useState<Hotel[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [billingHotel, setBillingHotel] = useState<Hotel | null>(null)
+  const [togglingId, setTogglingId] = useState<number | null>(null)
 
   const loadHotels = async () => {
     setLoading(true)
@@ -44,6 +47,20 @@ const HotelsView = () => {
   useEffect(() => {
     loadHotels()
   }, [])
+
+  const toggleActive = async (hotel: Hotel) => {
+    setTogglingId(hotel.id)
+    setError(null)
+
+    try {
+      await api.patch(`/hotels/${hotel.id}`, { is_active: !hotel.is_active })
+      await loadHotels()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to update property status.')
+    } finally {
+      setTogglingId(null)
+    }
+  }
 
   return (
     <Grid container spacing={6}>
@@ -73,17 +90,18 @@ const HotelsView = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Name</TableCell>
-                    <TableCell>Type</TableCell>
+                    <TableCell>Property Type</TableCell>
                     <TableCell>City</TableCell>
                     <TableCell>Owner</TableCell>
                     <TableCell>Status</TableCell>
+                    <TableCell align='right'>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {hotels.map(hotel => (
                     <TableRow key={hotel.id}>
                       <TableCell>{hotel.name}</TableCell>
-                      <TableCell className='capitalize'>{hotel.building_type}</TableCell>
+                      <TableCell className='capitalize'>{hotel.property_type}</TableCell>
                       <TableCell>{hotel.city ?? '-'}</TableCell>
                       <TableCell>{hotel.owner?.name ?? '-'}</TableCell>
                       <TableCell>
@@ -93,11 +111,26 @@ const HotelsView = () => {
                           color={hotel.is_active ? 'success' : 'default'}
                         />
                       </TableCell>
+                      <TableCell align='right'>
+                        <div className='flex gap-2 justify-end'>
+                          <Button size='small' onClick={() => setBillingHotel(hotel)}>
+                            Billing
+                          </Button>
+                          <Button
+                            size='small'
+                            color={hotel.is_active ? 'error' : 'success'}
+                            disabled={togglingId === hotel.id}
+                            onClick={() => toggleActive(hotel)}
+                          >
+                            {hotel.is_active ? 'Deactivate' : 'Activate'}
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                   {hotels.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className='text-center'>
+                      <TableCell colSpan={6} className='text-center'>
                         No properties yet. Onboard your first one.
                       </TableCell>
                     </TableRow>
@@ -117,6 +150,8 @@ const HotelsView = () => {
           loadHotels()
         }}
       />
+
+      <BillingDialog hotel={billingHotel} open={billingHotel !== null} onClose={() => setBillingHotel(null)} />
     </Grid>
   )
 }

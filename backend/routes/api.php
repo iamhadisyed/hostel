@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\HotelAccountController;
+use App\Http\Controllers\Api\HotelBillingController;
 use App\Http\Controllers\Api\HotelController;
 use App\Http\Controllers\Api\MenuItemController;
 use App\Http\Controllers\Api\OrderController;
@@ -41,8 +42,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/hotels', [HotelController::class, 'index']);
     Route::get('/hotels/{hotel}', [HotelController::class, 'show']);
-    Route::post('/hotels', [HotelController::class, 'store'])
-        ->middleware('role:'.User::ROLE_SUPER_ADMIN);
+
+    Route::middleware('role:'.User::ROLE_SUPER_ADMIN)->group(function () {
+        Route::post('/hotels', [HotelController::class, 'store']);
+        Route::patch('/hotels/{hotel}', [HotelController::class, 'update']);
+
+        Route::get('/super-admin/billing-dashboard', [HotelBillingController::class, 'dashboard']);
+        Route::get('/hotels/{hotel}/billing', [HotelBillingController::class, 'show']);
+        Route::put('/hotels/{hotel}/billing', [HotelBillingController::class, 'updateSubscription']);
+        Route::post('/hotels/{hotel}/billing/payments', [HotelBillingController::class, 'storePayment']);
+    });
 
     Route::middleware('role:'.User::ROLE_SUPER_ADMIN.','.User::ROLE_OWNER)->group(function () {
         Route::get('/hotels/{hotel}/accounts', [HotelAccountController::class, 'index']);

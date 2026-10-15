@@ -22,7 +22,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 export const homeRouteForRole = (role: User['role']) => {
   switch (role) {
     case 'super_admin':
-      return '/super-admin/hotels'
+      return '/super-admin/dashboard'
     case 'owner':
       return '/owner/analytics'
     case 'warden':

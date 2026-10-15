@@ -3,7 +3,10 @@ import type { Role } from '@/types/api'
 export type NavItem = { label: string; href: string; icon: string }
 
 export const roleMenus: Record<Role, NavItem[]> = {
-  super_admin: [{ label: 'Properties', href: '/super-admin/hotels', icon: 'ri-building-line' }],
+  super_admin: [
+    { label: 'Dashboard', href: '/super-admin/dashboard', icon: 'ri-dashboard-line' },
+    { label: 'Properties', href: '/super-admin/hotels', icon: 'ri-building-line' }
+  ],
   owner: [
     { label: 'Analytics', href: '/owner/analytics', icon: 'ri-bar-chart-box-line' },
     { label: 'Expenses', href: '/owner/expenses', icon: 'ri-wallet-3-line' },

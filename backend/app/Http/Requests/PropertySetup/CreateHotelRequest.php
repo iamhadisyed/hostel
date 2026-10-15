@@ -16,6 +16,7 @@ class CreateHotelRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'property_type' => ['required', Rule::in(['hotel', 'hostel'])],
             'building_type' => ['required', Rule::in(['flat', 'house', 'other'])],
             'address' => ['nullable', 'string'],
             'city' => ['nullable', 'string', 'max:255'],

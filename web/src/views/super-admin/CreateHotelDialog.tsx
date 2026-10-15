@@ -17,18 +17,25 @@ import Alert from '@mui/material/Alert'
 import RadioGroup from '@mui/material/RadioGroup'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Radio from '@mui/material/Radio'
+import FormControl from '@mui/material/FormControl'
+import FormLabel from '@mui/material/FormLabel'
+import Checkbox from '@mui/material/Checkbox'
 
 import { api, ApiError } from '@/libs/api'
+import type { PropertyType } from '@/types/api'
 
 type RoomTypeForm = { name: string; default_capacity: number; monthly_price: number; description: string }
-type RoomForm = { room_number: string; room_type: string; capacity: number }
+type RoomForm = { room_number: string; room_type: string; capacity: number; capacityTouched: boolean }
 type FloorForm = { number: number; name: string; rooms: RoomForm[] }
 
 const emptyRoomType = (): RoomTypeForm => ({ name: '', default_capacity: 1, monthly_price: 0, description: '' })
-const emptyRoom = (): RoomForm => ({ room_number: '', room_type: '', capacity: 1 })
+const emptyRoom = (): RoomForm => ({ room_number: '', room_type: '', capacity: 1, capacityTouched: false })
 const emptyFloor = (n: number): FloorForm => ({ number: n, name: '', rooms: [emptyRoom()] })
 
+const todayStr = () => new Date().toISOString().slice(0, 10)
+
 const CreateHotelDialog = ({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) => {
+  const [propertyType, setPropertyType] = useState<PropertyType>('hostel')
   const [name, setName] = useState('')
   const [buildingType, setBuildingType] = useState<'flat' | 'house' | 'other'>('flat')
   const [city, setCity] = useState('')
@@ -43,10 +50,17 @@ const CreateHotelDialog = ({ open, onClose, onCreated }: { open: boolean; onClos
   const [roomTypes, setRoomTypes] = useState<RoomTypeForm[]>([emptyRoomType()])
   const [floors, setFloors] = useState<FloorForm[]>([emptyFloor(1)])
 
+  const [setBilling, setSetBilling] = useState(false)
+  const [onboardingFee, setOnboardingFee] = useState(0)
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
+  const [recurringAmount, setRecurringAmount] = useState(0)
+  const [billingAnchorDate, setBillingAnchorDate] = useState(todayStr())
+
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const reset = () => {
+    setPropertyType('hostel')
     setName('')
     setCity('')
     setAddress('')
@@ -57,6 +71,11 @@ const CreateHotelDialog = ({ open, onClose, onCreated }: { open: boolean; onClos
     setOwnerPassword('')
     setRoomTypes([emptyRoomType()])
     setFloors([emptyFloor(1)])
+    setSetBilling(false)
+    setOnboardingFee(0)
+    setBillingCycle('monthly')
+    setRecurringAmount(0)
+    setBillingAnchorDate(todayStr())
     setError(null)
   }
 
@@ -71,6 +90,7 @@ const CreateHotelDialog = ({ open, onClose, onCreated }: { open: boolean; onClos
 
     const payload: Record<string, unknown> = {
       name,
+      property_type: propertyType,
       building_type: buildingType,
       city,
       address,
@@ -99,7 +119,22 @@ const CreateHotelDialog = ({ open, onClose, onCreated }: { open: boolean; onClos
     }
 
     try {
-      await api.post('/hotels', payload)
+      const hotel = await api.post<{ id: number }>('/hotels', payload)
+
+      if (setBilling) {
+        try {
+          await api.put(`/hotels/${hotel.id}/billing`, {
+            onboarding_fee: Number(onboardingFee),
+            billing_cycle: billingCycle,
+            recurring_amount: Number(recurringAmount),
+            billing_anchor_date: billingAnchorDate
+          })
+        } catch {
+          // Property was created successfully - billing terms can still be set
+          // later from the property list, so don't fail the whole flow here.
+        }
+      }
+
       reset()
       onCreated()
     } catch (err) {
@@ -125,6 +160,19 @@ const CreateHotelDialog = ({ open, onClose, onCreated }: { open: boolean; onClos
     )
   }
 
+  // Selecting a room type pre-fills that room's capacity from the type's
+  // default - the super admin only needs to touch capacity per-room when a
+  // specific room actually differs from the type's default.
+  const selectRoomType = (floorIdx: number, roomIdx: number, typeName: string) => {
+    const room = floors[floorIdx].rooms[roomIdx]
+    const type = roomTypes.find(rt => rt.name === typeName)
+
+    updateRoom(floorIdx, roomIdx, {
+      room_type: typeName,
+      capacity: !room.capacityTouched && type ? type.default_capacity : room.capacity
+    })
+  }
+
   const updateRoomType = (idx: number, patch: Partial<RoomTypeForm>) => {
     setRoomTypes(prev => prev.map((rt, i) => (i === idx ? { ...rt, ...patch } : rt)))
   }
@@ -135,6 +183,20 @@ const CreateHotelDialog = ({ open, onClose, onCreated }: { open: boolean; onClos
       <DialogContent dividers className='flex flex-col gap-6'>
         {error && <Alert severity='error'>{error}</Alert>}
 
+        <FormControl>
+          <FormLabel id='property-type-label'>What kind of property is this?</FormLabel>
+          <RadioGroup
+            row
+            aria-labelledby='property-type-label'
+            value={propertyType}
+            onChange={e => setPropertyType(e.target.value as PropertyType)}
+          >
+            <FormControlLabel value='hostel' control={<Radio />} label='Hostel (shared rooms, per-bed booking)' />
+            <FormControlLabel value='hotel' control={<Radio />} label='Hotel (private rooms)' />
+          </RadioGroup>
+        </FormControl>
+
+        <Divider />
         <Typography variant='h6'>Property Details</Typography>
         <Grid container spacing={4}>
           <Grid size={{ xs: 12, sm: 6 }}>
@@ -207,6 +269,10 @@ const CreateHotelDialog = ({ open, onClose, onCreated }: { open: boolean; onClos
             + Add Room Type
           </Button>
         </div>
+        <Typography variant='body2' color='text.secondary' className='-mt-4'>
+          Define pricing tiers here (e.g. Dorm-4, Private Room). Capacity is set per room below - the default here just
+          pre-fills new rooms of this type.
+        </Typography>
         {roomTypes.map((rt, idx) => (
           <Grid container spacing={2} key={idx} alignItems='center'>
             <Grid size={{ xs: 12, sm: 3 }}>
@@ -223,7 +289,7 @@ const CreateHotelDialog = ({ open, onClose, onCreated }: { open: boolean; onClos
                 fullWidth
                 size='small'
                 type='number'
-                label='Capacity'
+                label='Default Beds/Room'
                 value={rt.default_capacity}
                 onChange={e => updateRoomType(idx, { default_capacity: Number(e.target.value) })}
               />
@@ -314,7 +380,7 @@ const CreateHotelDialog = ({ open, onClose, onCreated }: { open: boolean; onClos
                     size='small'
                     label='Room Type'
                     value={room.room_type}
-                    onChange={e => updateRoom(floorIdx, roomIdx, { room_type: e.target.value })}
+                    onChange={e => selectRoomType(floorIdx, roomIdx, e.target.value)}
                   >
                     {roomTypes.map((rt, i) => (
                       <MenuItem key={i} value={rt.name} disabled={!rt.name}>
@@ -330,7 +396,7 @@ const CreateHotelDialog = ({ open, onClose, onCreated }: { open: boolean; onClos
                     type='number'
                     label='Capacity (beds)'
                     value={room.capacity}
-                    onChange={e => updateRoom(floorIdx, roomIdx, { capacity: Number(e.target.value) })}
+                    onChange={e => updateRoom(floorIdx, roomIdx, { capacity: Number(e.target.value), capacityTouched: true })}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 2 }}>
@@ -352,6 +418,56 @@ const CreateHotelDialog = ({ open, onClose, onCreated }: { open: boolean; onClos
             </Button>
           </div>
         ))}
+
+        <Divider />
+        <FormControlLabel
+          control={<Checkbox checked={setBilling} onChange={e => setSetBilling(e.target.checked)} />}
+          label='Set this property’s billing terms now (you can also do this later from the property list)'
+        />
+        {setBilling && (
+          <Grid container spacing={4}>
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <TextField
+                fullWidth
+                type='number'
+                label='Onboarding Fee (one-time)'
+                value={onboardingFee}
+                onChange={e => setOnboardingFee(Number(e.target.value))}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <TextField
+                select
+                fullWidth
+                label='Billing Cycle'
+                value={billingCycle}
+                onChange={e => setBillingCycle(e.target.value as typeof billingCycle)}
+              >
+                <MenuItem value='monthly'>Monthly</MenuItem>
+                <MenuItem value='yearly'>Yearly</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <TextField
+                fullWidth
+                type='number'
+                label={`Recurring Amount / ${billingCycle === 'yearly' ? 'year' : 'month'}`}
+                value={recurringAmount}
+                onChange={e => setRecurringAmount(Number(e.target.value))}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 3 }}>
+              <TextField
+                fullWidth
+                type='date'
+                label='First Billing Date'
+                InputLabelProps={{ shrink: true }}
+                value={billingAnchorDate}
+                onChange={e => setBillingAnchorDate(e.target.value)}
+              />
+            </Grid>
+          </Grid>
+        )}
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>

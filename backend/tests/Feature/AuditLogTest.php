@@ -18,6 +18,7 @@ class AuditLogTest extends TestCase
 
         $this->actingAs($admin, 'sanctum')->postJson('/api/hotels', [
             'name' => 'Green Valley Hostel',
+            'property_type' => 'hostel',
             'building_type' => 'flat',
             'floor_count' => 1,
             'owner' => ['name' => 'Owner Jane', 'email' => 'owner1@example.com', 'password' => 'password123'],

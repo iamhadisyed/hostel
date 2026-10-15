@@ -14,26 +14,16 @@ import InputAdornment from '@mui/material/InputAdornment'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 
-// Third-party Imports
-import classnames from 'classnames'
-
-// Type Imports
-import type { Mode } from '@core/types'
-
 // Component Imports
 import Link from '@components/Link'
 import Logo from '@components/layout/shared/Logo'
-
-// Config Imports
-import themeConfig from '@configs/themeConfig'
+import AuthHero from '@components/auth/AuthHero'
 
 // Hook Imports
-import { useImageVariant } from '@core/hooks/useImageVariant'
-import { useSettings } from '@core/hooks/useSettings'
 import { useAuth, homeRouteForRole } from '@/contexts/AuthContext'
 import { ApiError } from '@/libs/api'
 
-const LoginV2 = ({ mode }: { mode: Mode }) => {
+const Login = () => {
   // States
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [email, setEmail] = useState('')
@@ -41,27 +31,9 @@ const LoginV2 = ({ mode }: { mode: Mode }) => {
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  // Vars
-  const darkImg = '/images/pages/auth-v2-mask-1-dark.png'
-  const lightImg = '/images/pages/auth-v2-mask-1-light.png'
-  const darkIllustration = '/images/illustrations/auth/v2-login-dark.png'
-  const lightIllustration = '/images/illustrations/auth/v2-login-light.png'
-  const borderedDarkIllustration = '/images/illustrations/auth/v2-login-dark-border.png'
-  const borderedLightIllustration = '/images/illustrations/auth/v2-login-light-border.png'
-
   // Hooks
   const router = useRouter()
-  const { settings } = useSettings()
   const { login } = useAuth()
-  const authBackground = useImageVariant(mode, lightImg, darkImg)
-
-  const characterIllustration = useImageVariant(
-    mode,
-    lightIllustration,
-    darkIllustration,
-    borderedLightIllustration,
-    borderedDarkIllustration
-  )
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
@@ -83,31 +55,16 @@ const LoginV2 = ({ mode }: { mode: Mode }) => {
 
   return (
     <div className='flex bs-full justify-center'>
-      <div
-        className={classnames(
-          'flex bs-full items-center justify-center flex-1 min-bs-[100dvh] relative p-6 max-md:hidden',
-          {
-            'border-ie': settings.skin === 'bordered'
-          }
-        )}
-      >
-        <div className='pli-6 max-lg:mbs-40 lg:mbe-24'>
-          <img
-            src={characterIllustration}
-            alt='character-illustration'
-            className='max-bs-[673px] max-is-full bs-auto'
-          />
-        </div>
-        <img src={authBackground} className='absolute bottom-[4%] z-[-1] is-full max-md:hidden' />
-      </div>
-      <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:!min-is-[unset] md:p-12 md:is-[480px]'>
+      <AuthHero title='Run every property from one place.' subtitle='Hostel and hotel operations, built for how you actually work.' />
+
+      <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:!min-is-[unset] md:p-12 md:is-[480px] relative'>
         <Link className='absolute block-start-5 sm:block-start-[38px] inline-start-6 sm:inline-start-[38px]'>
           <Logo />
         </Link>
         <div className='flex flex-col gap-5 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset] mbs-11 sm:mbs-14 md:mbs-0'>
           <div>
-            <Typography variant='h4'>{`Welcome to ${themeConfig.templateName}! 👋🏻`}</Typography>
-            <Typography className='mbs-1'>Please sign-in to your account and start the adventure</Typography>
+            <Typography variant='h4'>Welcome back</Typography>
+            <Typography className='mbs-1'>Sign in to manage your properties</Typography>
           </div>
           {error && <Alert severity='error'>{error}</Alert>}
           <form noValidate autoComplete='off' onSubmit={handleSubmit} className='flex flex-col gap-5'>
@@ -160,4 +117,4 @@ const LoginV2 = ({ mode }: { mode: Mode }) => {
   )
 }
 
-export default LoginV2
+export default Login

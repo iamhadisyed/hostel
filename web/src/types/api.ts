@@ -14,10 +14,13 @@ export type User = {
   updated_at: string
 }
 
+export type PropertyType = 'hotel' | 'hostel'
+
 export type Hotel = {
   id: number
   owner_id: number
   name: string
+  property_type: PropertyType
   building_type: 'flat' | 'house' | 'other'
   address: string | null
   city: string | null
@@ -26,6 +29,68 @@ export type Hotel = {
   owner?: User
   floors?: Floor[]
   room_types?: RoomType[]
+}
+
+export type BillingCycle = 'monthly' | 'yearly'
+
+export type HotelSubscription = {
+  id: number
+  hotel_id: number
+  onboarding_fee: string
+  onboarding_fee_paid_at: string | null
+  billing_cycle: BillingCycle
+  recurring_amount: string
+  billing_anchor_date: string
+  notes: string | null
+}
+
+export type BillingStatusValue = 'no_plan' | 'upcoming' | 'current' | 'overdue'
+
+export type BillingStatus = {
+  status: BillingStatusValue
+  current_period_start: string | null
+  current_period_end: string | null
+  days_overdue: number
+  onboarding_paid: boolean
+}
+
+export type HotelBillingPaymentType = 'onboarding' | 'recurring'
+
+export type HotelBillingPayment = {
+  id: number
+  hotel_id: number
+  type: HotelBillingPaymentType
+  period_start: string | null
+  period_end: string | null
+  amount: string
+  paid_at: string
+  recorded_by: number
+  note: string | null
+  recorded_by_user?: User
+}
+
+export type HotelBillingDetail = {
+  subscription: HotelSubscription | null
+  status: BillingStatus
+  payments: HotelBillingPayment[]
+}
+
+export type BillingDashboardRow = {
+  hotel: Hotel
+  billing: BillingStatus
+}
+
+export type BillingDashboard = {
+  summary: {
+    total_properties: number
+    active_properties: number
+    inactive_properties: number
+    overdue_count: number
+    upcoming_count: number
+    estimated_monthly_revenue: number
+  }
+  overdue: BillingDashboardRow[]
+  upcoming: BillingDashboardRow[]
 }
 
 export type Floor = {

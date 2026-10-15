@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PropertySetup\CreateHotelRequest;
+use App\Http\Requests\PropertySetup\UpdateHotelRequest;
 use App\Models\Bed;
 use App\Models\Floor;
 use App\Models\Hotel;
@@ -51,6 +52,7 @@ class HotelController extends Controller
             $hotel = Hotel::create([
                 'owner_id' => $owner->id,
                 'name' => $request->string('name'),
+                'property_type' => $request->string('property_type'),
                 'building_type' => $request->string('building_type'),
                 'address' => $request->input('address'),
                 'city' => $request->input('city'),
@@ -106,6 +108,17 @@ class HotelController extends Controller
         $this->auditLog->log($request->user(), $hotel->id, 'hotel.created', $hotel, [], ['name' => $hotel->name]);
 
         return response()->json($hotel->load(['owner', 'floors.rooms.beds', 'roomTypes']), 201);
+    }
+
+    public function update(UpdateHotelRequest $request, Hotel $hotel): JsonResponse
+    {
+        $before = $hotel->only('is_active');
+
+        $hotel->update($request->only('is_active'));
+
+        $this->auditLog->log($request->user(), $hotel->id, 'hotel.updated', $hotel, $before, $hotel->only('is_active'));
+
+        return response()->json($hotel->fresh());
     }
 
     private function resolveOwner(CreateHotelRequest $request): User

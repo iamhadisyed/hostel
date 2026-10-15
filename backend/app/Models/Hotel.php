@@ -6,14 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Hotel extends Model
 {
     use HasFactory;
 
+    public const TYPE_HOTEL = 'hotel';
+
+    public const TYPE_HOSTEL = 'hostel';
+
     protected $fillable = [
         'owner_id',
         'name',
+        'property_type',
         'building_type',
         'address',
         'city',
@@ -86,5 +92,15 @@ class Hotel extends Model
     public function visitorPasses(): HasMany
     {
         return $this->hasMany(VisitorPass::class);
+    }
+
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(HotelSubscription::class);
+    }
+
+    public function billingPayments(): HasMany
+    {
+        return $this->hasMany(HotelBillingPayment::class);
     }
 }

@@ -16,6 +16,7 @@ class PropertySetupTest extends TestCase
     {
         return [
             'name' => 'Green Valley Hostel',
+            'property_type' => 'hostel',
             'building_type' => 'flat',
             'city' => 'Lahore',
             'floor_count' => 1,
@@ -171,5 +172,49 @@ class PropertySetupTest extends TestCase
 
         $response->assertStatus(200);
         $this->assertFalse($warden->fresh()->is_active);
+    }
+
+    public function test_property_type_is_required_and_validated(): void
+    {
+        $admin = $this->makeSuperAdmin();
+
+        $payload = $this->wizardPayload();
+        $payload['property_type'] = 'resort'; // not a valid option
+
+        $response = $this->actingAs($admin, 'sanctum')->postJson('/api/hotels', $payload);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('property_type');
+    }
+
+    public function test_super_admin_can_onboard_a_hotel_property_type(): void
+    {
+        $admin = $this->makeSuperAdmin();
+
+        $payload = $this->wizardPayload();
+        $payload['property_type'] = 'hotel';
+
+        $response = $this->actingAs($admin, 'sanctum')->postJson('/api/hotels', $payload);
+
+        $response->assertStatus(201)->assertJsonPath('property_type', 'hotel');
+    }
+
+    public function test_super_admin_can_deactivate_a_property(): void
+    {
+        $admin = $this->makeSuperAdmin();
+        ['hotel' => $hotel] = $this->makeHotelWithBeds();
+
+        $response = $this->actingAs($admin, 'sanctum')->patchJson("/api/hotels/{$hotel->id}", ['is_active' => false]);
+
+        $response->assertStatus(200)->assertJsonPath('is_active', false);
+        $this->assertFalse($hotel->fresh()->is_active);
+    }
+
+    public function test_owner_cannot_deactivate_a_property(): void
+    {
+        ['owner' => $owner, 'hotel' => $hotel] = $this->makeHotelWithBeds();
+
+        $response = $this->actingAs($owner, 'sanctum')->patchJson("/api/hotels/{$hotel->id}", ['is_active' => false]);
+
+        $response->assertStatus(403);
     }
 }
