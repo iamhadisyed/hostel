@@ -19,8 +19,12 @@ class HotelBillingController extends Controller
         private readonly HotelBillingStatusService $billingStatus
     ) {}
 
-    public function show(Hotel $hotel): JsonResponse
+    public function show(Request $request, Hotel $hotel): JsonResponse
     {
+        $actor = $request->user();
+
+        abort_unless($actor->isSuperAdmin() || ($actor->isOwner() && $hotel->owner_id === $actor->id), 403);
+
         return response()->json([
             'subscription' => $hotel->subscription,
             'status' => $this->billingStatus->statusFor($hotel),

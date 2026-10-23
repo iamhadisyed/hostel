@@ -48,12 +48,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/hotels/{hotel}', [HotelController::class, 'update']);
 
         Route::get('/super-admin/billing-dashboard', [HotelBillingController::class, 'dashboard']);
-        Route::get('/hotels/{hotel}/billing', [HotelBillingController::class, 'show']);
         Route::put('/hotels/{hotel}/billing', [HotelBillingController::class, 'updateSubscription']);
         Route::post('/hotels/{hotel}/billing/payments', [HotelBillingController::class, 'storePayment']);
     });
 
     Route::middleware('role:'.User::ROLE_SUPER_ADMIN.','.User::ROLE_OWNER)->group(function () {
+        // Read-only for Owner (own hotel only, enforced in the controller) -
+        // editing terms and recording payments stays Super Admin only.
+        Route::get('/hotels/{hotel}/billing', [HotelBillingController::class, 'show']);
+
         Route::get('/hotels/{hotel}/accounts', [HotelAccountController::class, 'index']);
         Route::post('/hotels/{hotel}/accounts', [HotelAccountController::class, 'store']);
         Route::delete('/hotels/{hotel}/accounts/{user}', [HotelAccountController::class, 'destroy']);

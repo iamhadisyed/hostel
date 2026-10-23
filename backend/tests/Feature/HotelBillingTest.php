@@ -21,6 +21,46 @@ class HotelBillingTest extends TestCase
         $response->assertStatus(200)->assertJsonPath('status.status', 'no_plan');
     }
 
+    public function test_owner_can_view_their_own_hotel_billing(): void
+    {
+        ['owner' => $owner, 'hotel' => $hotel] = $this->makeHotelWithBeds();
+
+        $hotel->subscription()->create([
+            'onboarding_fee' => 0,
+            'billing_cycle' => 'monthly',
+            'recurring_amount' => 5000,
+            'billing_anchor_date' => Carbon::today(),
+        ]);
+
+        $response = $this->actingAs($owner, 'sanctum')->getJson("/api/hotels/{$hotel->id}/billing");
+
+        $response->assertStatus(200)->assertJsonPath('subscription.recurring_amount', '5000.00');
+    }
+
+    public function test_owner_cannot_view_another_owners_hotel_billing(): void
+    {
+        ['hotel' => $hotel] = $this->makeHotelWithBeds();
+        $otherOwner = $this->makeOwner();
+
+        $response = $this->actingAs($otherOwner, 'sanctum')->getJson("/api/hotels/{$hotel->id}/billing");
+
+        $response->assertStatus(403);
+    }
+
+    public function test_owner_cannot_record_a_payment_on_their_own_hotel(): void
+    {
+        ['owner' => $owner, 'hotel' => $hotel] = $this->makeHotelWithBeds();
+
+        $response = $this->actingAs($owner, 'sanctum')->postJson("/api/hotels/{$hotel->id}/billing/payments", [
+            'type' => 'recurring',
+            'amount' => 5000,
+            'paid_at' => Carbon::today()->toDateString(),
+            'period_start' => Carbon::today()->toDateString(),
+        ]);
+
+        $response->assertStatus(403);
+    }
+
     public function test_super_admin_can_set_billing_terms(): void
     {
         $admin = $this->makeSuperAdmin();

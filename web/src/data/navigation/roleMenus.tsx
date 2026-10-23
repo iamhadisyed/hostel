@@ -9,6 +9,7 @@ export const roleMenus: Record<Role, NavItem[]> = {
   ],
   owner: [
     { label: 'Analytics', href: '/owner/analytics', icon: 'ri-bar-chart-box-line' },
+    { label: 'Billing', href: '/owner/billing', icon: 'ri-bill-line' },
     { label: 'Expenses', href: '/owner/expenses', icon: 'ri-wallet-3-line' },
     { label: 'Accounts', href: '/owner/accounts', icon: 'ri-team-line' },
     { label: 'Bookings', href: '/warden/bookings', icon: 'ri-hotel-bed-line' },
