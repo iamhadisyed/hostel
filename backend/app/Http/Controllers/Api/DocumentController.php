@@ -45,7 +45,10 @@ class DocumentController extends Controller
         $actor = $request->user();
 
         abort_unless(
-            $actor->id === $document->user_id || in_array($actor->role, ['warden', 'owner', 'super_admin'], true),
+            $actor->id === $document->user_id
+                || $actor->isSuperAdmin()
+                || ($actor->isWarden() && $this->documentOwnerHasBookingAt($document, [$actor->hotel_id]))
+                || ($actor->isOwner() && $this->documentOwnerHasBookingAt($document, $actor->ownedHotels()->pluck('id')->all())),
             403
         );
 
@@ -59,5 +62,23 @@ class DocumentController extends Controller
             'document' => $document,
             'url' => $url,
         ]);
+    }
+
+    /**
+     * Whether this document's owner (a guest) has ever had a booking at one
+     * of the given hotels - scopes a Warden/Owner's view of guest identity
+     * documents to guests who have actually stayed at their own property.
+     *
+     * @param  array<int>  $hotelIds
+     */
+    private function documentOwnerHasBookingAt(Document $document, array $hotelIds): bool
+    {
+        if (empty($hotelIds)) {
+            return false;
+        }
+
+        return $document->user()->whereHas('bookings', function ($query) use ($hotelIds) {
+            $query->whereIn('hotel_id', $hotelIds);
+        })->exists();
     }
 }
